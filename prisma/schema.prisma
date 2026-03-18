@@ -1,0 +1,101 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// 授業情報（シラバスから）
+model Course {
+  id          String   @id @default(cuid())
+  courseCode  String   @unique
+  name        String
+  nameEn      String?
+  instructor  String
+  credits     Int
+  department  String?
+  year        Int?
+  semester    String?
+  dayOfWeek   Int?
+  period      Int?
+  room        String?
+  description String?
+  objectives  String?
+  syllabus    String?
+  evaluation  String?
+  textbook    String?
+  notes       String?
+  syllabusUrl String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  enrollments Enrollment[]
+  reviews     Review[]
+  notices     Notice[]
+}
+
+// 履修登録（LMSから同期）
+model Enrollment {
+  id        String   @id @default(cuid())
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  academicYear Int
+  semester  String
+  createdAt DateTime @default(now())
+
+  @@unique([courseId, academicYear, semester])
+}
+
+// 授業レビュー
+model Review {
+  id          String   @id @default(cuid())
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating      Int
+  difficulty  Int
+  workload    Int
+  comment     String
+  academicYear Int
+  semester    String
+  isAnonymous Boolean  @default(true)
+  nickname    String?
+  helpful     Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// 休講・補講通知（LMSから同期）
+model Notice {
+  id        String     @id @default(cuid())
+  courseId  String?
+  course    Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  type      String     @default("ANNOUNCEMENT")
+  title     String
+  content   String
+  date      DateTime?
+  period    Int?
+  lmsId     String?    @unique
+  isRead    Boolean    @default(false)
+  createdAt DateTime   @default(now())
+}
+
+// LMS認証情報（ローカル保存）
+model LmsCredential {
+  id        String    @id @default("default")
+  username  String
+  password  String
+  lastSync  DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// スクレイプキャッシュ
+model ScrapeCache {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  data      String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+}
