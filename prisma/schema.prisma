@@ -3,7 +3,9 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
 }
 
 // 授業情報（シラバスから）
@@ -38,50 +40,50 @@ model Course {
 
 // 履修登録（LMSから同期）
 model Enrollment {
-  id        String   @id @default(cuid())
-  courseId  String
-  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id           String   @id @default(cuid())
+  courseId     String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
   academicYear Int
-  semester  String
-  createdAt DateTime @default(now())
+  semester     String
+  createdAt    DateTime @default(now())
 
   @@unique([courseId, academicYear, semester])
 }
 
 // 授業レビュー
 model Review {
-  id          String   @id @default(cuid())
-  courseId    String
-  course      Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  rating      Int
-  difficulty  Int
-  workload    Int
-  comment     String
+  id           String   @id @default(cuid())
+  courseId     String
+  course       Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  rating       Int
+  difficulty   Int
+  workload     Int
+  comment      String
   academicYear Int
-  semester    String
-  isAnonymous Boolean  @default(true)
-  nickname    String?
-  helpful     Int      @default(0)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  semester     String
+  isAnonymous  Boolean  @default(true)
+  nickname     String?
+  helpful      Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 // 休講・補講通知（LMSから同期）
 model Notice {
-  id        String     @id @default(cuid())
+  id        String    @id @default(cuid())
   courseId  String?
-  course    Course?    @relation(fields: [courseId], references: [id], onDelete: SetNull)
-  type      String     @default("ANNOUNCEMENT")
+  course    Course?   @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  type      String    @default("ANNOUNCEMENT")
   title     String
   content   String
   date      DateTime?
   period    Int?
-  lmsId     String?    @unique
-  isRead    Boolean    @default(false)
-  createdAt DateTime   @default(now())
+  lmsId     String?   @unique
+  isRead    Boolean   @default(false)
+  createdAt DateTime  @default(now())
 }
 
-// LMS認証情報（ローカル保存）
+// LMS認証情報（ユーザーごと）
 model LmsCredential {
   id        String    @id @default("default")
   username  String
